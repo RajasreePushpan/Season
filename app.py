@@ -13,7 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import label_binarize
 
 # Path to the example dataset
-EXAMPLE_DATASET_PATH = '/Users/rajasreepushpan/Downloads/Semester4_final/weather_classification_data.csv'
+EXAMPLE_DATASET_PATH = 'data/weather_classification_data.csv'
 
 
 # Helper function to plot confusion matrix
