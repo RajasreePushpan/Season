@@ -14,7 +14,6 @@ from sklearn.neighbors import KNeighborsClassifier
 # Path to the example dataset
 EXAMPLE_DATASET_PATH = 'https://raw.githubusercontent.com/RajasreePushpan/Season/main/weather_classification_data.csv'
 
-
 # Helper function to plot confusion matrix
 def plot_confusion_matrix(cm, labels):
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -27,14 +26,10 @@ def plot_confusion_matrix(cm, labels):
 
 # Helper function to plot ROC curve for binary classification
 def plot_roc_curve_binary(y_test, y_prob, pos_label):
-    # Ensure y_test is numeric
     y_test_numeric = (y_test == pos_label).astype(int)
-
-    # Compute ROC curve and ROC area for the positive class
     fpr, tpr, _ = roc_curve(y_test_numeric, y_prob)
     roc_auc = auc(fpr, tpr)
 
-    # Plot ROC curve
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.plot(fpr, tpr, label=f'ROC curve (area = {roc_auc:.2f})')
     ax.plot([0, 1], [0, 1], 'k--')
@@ -56,7 +51,6 @@ def plot_roc_curve_multi_class(y_test, y_prob):
         fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_prob[:, i])
         roc_auc[i] = auc(fpr[i], tpr[i])
 
-    # Plot ROC curves
     fig, ax = plt.subplots(figsize=(8, 6))
     for i in range(n_classes):
         ax.plot(fpr[i], tpr[i], label=f'Class {i} (area = {roc_auc[i]:.2f})')
@@ -70,6 +64,23 @@ def plot_roc_curve_multi_class(y_test, y_prob):
 
 # Title of the app
 st.title('Classification Analysis Streamlit Application')
+
+# Inject CSS for button styling
+st.markdown("""
+    <style>
+        .stButton>button {
+            background-color: #ADD8E6; /* Pale Blue */
+            color: black;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .stButton>button:hover {
+            background-color: #87CEFA; /* Lighter Blue */
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Initialize data variable
 data = None
@@ -85,7 +96,6 @@ example_dataset = st.sidebar.selectbox(
 if example_dataset == "Weather Classification Data":
     try:
         data = pd.read_csv(EXAMPLE_DATASET_PATH)
-        # Remove rows with any null values
         data = data.dropna()
         st.success("Example dataset loaded successfully.")
     except FileNotFoundError:
@@ -96,7 +106,6 @@ uploaded_file = st.file_uploader("Or upload your own dataset (CSV file)", type='
 
 if uploaded_file:
     data = pd.read_csv(uploaded_file)
-    # Remove rows with any null values
     data = data.dropna()
     st.success("Your dataset has been successfully uploaded.")
 
@@ -148,7 +157,6 @@ if st.button("Generate Pair Plot"):
         st.pyplot(fig)
 
 if st.button("Generate Correlation Heatmap"):
-    # Convert categorical data to numeric
     numeric_data = data.select_dtypes(include=[np.number])
     if numeric_data.empty:
         st.write("No numeric data available to plot correlation heatmap.")
@@ -230,20 +238,25 @@ if model_name != "None":
                     if hasattr(st.session_state.model, "predict_proba"):
                         y_prob = st.session_state.model.predict_proba(st.session_state.X_test)
                         if len(np.unique(st.session_state.y_test)) == 2:  # Binary Classification
-                            plot_roc_curve_binary(st.session_state.y_test, y_prob[:, 1], pos_label=1)
+                            positive_class = np.unique(st.session_state.y_test)[
+                                1]  # Assuming the second class is positive
+                            plot_roc_curve_binary(st.session_state.y_test, y_prob[:, 1], positive_class)
                         else:
-                            y_test_binarized = label_binarize(st.session_state.y_test, classes=np.unique(st.session_state.y_test))
+                            y_test_binarized = label_binarize(st.session_state.y_test, classes=np.unique(y_pred))
                             plot_roc_curve_multi_class(y_test_binarized, y_prob)
+                    else:
+                        st.warning("The selected model does not support probability prediction.")
 
                     # Create and download the predicted results CSV
-                    if st.button('Download Predicted Results'):
-                        results_df = pd.DataFrame({
-                            'Actual': st.session_state.y_test,
-                            'Predicted': y_pred
-                        })
-                        st.download_button(
-                            label="Download CSV",
-                            data=results_df.to_csv(index=False),
-                            file_name='predicted_results.csv',
-                            mime='text/csv'
-                        )
+                    results_df = pd.DataFrame({
+                        'Actual': st.session_state.y_test,
+                        'Predicted': y_pred
+                    })
+                    st.download_button(
+                        label="Download Predictions CSV",
+                        data=results_df.to_csv(index=False),
+                        file_name='predicted_results.csv',
+                        mime='text/csv'
+                    )
+                else:
+                    st.warning("Please split the dataset before making predictions.")
