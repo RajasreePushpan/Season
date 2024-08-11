@@ -15,6 +15,15 @@ from sklearn.preprocessing import label_binarize
 # Path to the example dataset
 EXAMPLE_DATASET_PATH = 'https://raw.githubusercontent.com/RajasreePushpan/Season/main/weather_classification_data.csv'
 
+# Custom CSS for pale blue buttons
+st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        background-color: #ADD8E6;
+        color: black;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Helper function to plot confusion matrix
 def plot_confusion_matrix(cm, labels):
@@ -24,7 +33,6 @@ def plot_confusion_matrix(cm, labels):
     ax.set_ylabel('True labels')
     ax.set_title('Confusion Matrix')
     st.pyplot(fig)
-
 
 # Helper function to plot ROC curve for binary classification
 def plot_roc_curve_binary(y_test, y_prob, pos_label):
@@ -44,7 +52,6 @@ def plot_roc_curve_binary(y_test, y_prob, pos_label):
     ax.set_title('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
-
 
 # Helper function to plot ROC curve for multi-class classification
 def plot_roc_curve_multi_class(y_test, y_prob):
@@ -67,7 +74,6 @@ def plot_roc_curve_multi_class(y_test, y_prob):
     ax.set_title('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
-
 
 # Title of the app
 st.title('Classification Analysis Streamlit Application')
