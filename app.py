@@ -4,26 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, label_binarize
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import label_binarize
 
 # Path to the example dataset
 EXAMPLE_DATASET_PATH = 'https://raw.githubusercontent.com/RajasreePushpan/Season/main/weather_classification_data.csv'
 
-# Custom CSS for pale blue buttons
-st.markdown("""
-    <style>
-    div.stButton > button:first-child {
-        background-color: #ADD8E6;
-        color: black;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
 # Helper function to plot confusion matrix
 def plot_confusion_matrix(cm, labels):
@@ -31,8 +21,9 @@ def plot_confusion_matrix(cm, labels):
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels, ax=ax)
     ax.set_xlabel('Predicted labels')
     ax.set_ylabel('True labels')
-    ax.setTitle('Confusion Matrix')
+    ax.set_title('Confusion Matrix')
     st.pyplot(fig)
+
 
 # Helper function to plot ROC curve for binary classification
 def plot_roc_curve_binary(y_test, y_prob, pos_label):
@@ -49,9 +40,10 @@ def plot_roc_curve_binary(y_test, y_prob, pos_label):
     ax.plot([0, 1], [0, 1], 'k--')
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.setTitle('Receiver Operating Characteristic (ROC) Curve')
+    ax.set_title('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
+
 
 # Helper function to plot ROC curve for multi-class classification
 def plot_roc_curve_multi_class(y_test, y_prob):
@@ -71,9 +63,10 @@ def plot_roc_curve_multi_class(y_test, y_prob):
     ax.plot([0, 1], [0, 1], 'k--')
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.setTitle('Receiver Operating Characteristic (ROC) Curve')
+    ax.set_title('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
+
 
 # Title of the app
 st.title('Classification Analysis Streamlit Application')
@@ -94,7 +87,7 @@ if example_dataset == "Weather Classification Data":
         data = pd.read_csv(EXAMPLE_DATASET_PATH)
         # Remove rows with any null values
         data = data.dropna()
-        st.success("Example dataset has been successfully loaded!")
+        st.success("Example dataset loaded successfully.")
     except FileNotFoundError:
         st.error(f"Example dataset '{EXAMPLE_DATASET_PATH}' not found. Please upload your own dataset.")
 
@@ -105,7 +98,7 @@ if uploaded_file:
     data = pd.read_csv(uploaded_file)
     # Remove rows with any null values
     data = data.dropna()
-    st.success("Dataset has been successfully uploaded!")
+    st.success("Your dataset has been successfully uploaded.")
 
 if data is None:
     st.warning("Please select or upload a dataset.")
@@ -235,4 +228,22 @@ if model_name != "None":
                     st.text(classification_report(st.session_state.y_test, y_pred))
 
                     if hasattr(st.session_state.model, "predict_proba"):
-                        y_prob = st.session_state.model.predict_proba(st.session_state.X
+                        y_prob = st.session_state.model.predict_proba(st.session_state.X_test)
+                        if len(np.unique(st.session_state.y_test)) == 2:  # Binary Classification
+                            plot_roc_curve_binary(st.session_state.y_test, y_prob[:, 1], pos_label=1)
+                        else:
+                            y_test_binarized = label_binarize(st.session_state.y_test, classes=np.unique(st.session_state.y_test))
+                            plot_roc_curve_multi_class(y_test_binarized, y_prob)
+
+                    # Create and download the predicted results CSV
+                    if st.button('Download Predicted Results'):
+                        results_df = pd.DataFrame({
+                            'Actual': st.session_state.y_test,
+                            'Predicted': y_pred
+                        })
+                        st.download_button(
+                            label="Download CSV",
+                            data=results_df.to_csv(index=False),
+                            file_name='predicted_results.csv',
+                            mime='text/csv'
+                        )
