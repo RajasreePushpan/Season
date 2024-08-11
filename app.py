@@ -31,7 +31,7 @@ def plot_confusion_matrix(cm, labels):
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels, ax=ax)
     ax.set_xlabel('Predicted labels')
     ax.set_ylabel('True labels')
-    ax.set_title('Confusion Matrix')
+    ax.setTitle('Confusion Matrix')
     st.pyplot(fig)
 
 # Helper function to plot ROC curve for binary classification
@@ -49,7 +49,7 @@ def plot_roc_curve_binary(y_test, y_prob, pos_label):
     ax.plot([0, 1], [0, 1], 'k--')
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.set_title('Receiver Operating Characteristic (ROC) Curve')
+    ax.setTitle('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
 
@@ -71,7 +71,7 @@ def plot_roc_curve_multi_class(y_test, y_prob):
     ax.plot([0, 1], [0, 1], 'k--')
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.set_title('Receiver Operating Characteristic (ROC) Curve')
+    ax.setTitle('Receiver Operating Characteristic (ROC) Curve')
     ax.legend(loc='lower right')
     st.pyplot(fig)
 
@@ -94,6 +94,7 @@ if example_dataset == "Weather Classification Data":
         data = pd.read_csv(EXAMPLE_DATASET_PATH)
         # Remove rows with any null values
         data = data.dropna()
+        st.success("Example dataset has been successfully loaded!")
     except FileNotFoundError:
         st.error(f"Example dataset '{EXAMPLE_DATASET_PATH}' not found. Please upload your own dataset.")
 
@@ -104,6 +105,7 @@ if uploaded_file:
     data = pd.read_csv(uploaded_file)
     # Remove rows with any null values
     data = data.dropna()
+    st.success("Dataset has been successfully uploaded!")
 
 if data is None:
     st.warning("Please select or upload a dataset.")
@@ -233,19 +235,4 @@ if model_name != "None":
                     st.text(classification_report(st.session_state.y_test, y_pred))
 
                     if hasattr(st.session_state.model, "predict_proba"):
-                        y_prob = st.session_state.model.predict_proba(st.session_state.X_test)
-                        if len(np.unique(st.session_state.y_test)) == 2:  # Binary Classification
-                            positive_class = np.unique(st.session_state.y_test)[
-                                1]  # Assuming the second class is positive
-                            plot_roc_curve_binary(st.session_state.y_test, y_prob[:, 1], positive_class)
-                        else:
-                            y_test_binarized = label_binarize(st.session_state.y_test, classes=np.unique(y_pred))
-                            plot_roc_curve_multi_class(y_test_binarized, y_prob)
-                    else:
-                        st.warning("The selected model does not support probability prediction.")
-
-                    results_df = pd.DataFrame({'True Label': st.session_state.y_test, 'Predicted Label': y_pred})
-                    csv = results_df.to_csv(index=False)
-                    st.download_button("Download Predictions", csv, "predictions.csv")
-                else:
-                    st.warning("Please split the dataset before making predictions.")
+                        y_prob = st.session_state.model.predict_proba(st.session_state.X
